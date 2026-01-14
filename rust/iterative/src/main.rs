@@ -8,7 +8,6 @@ use matrix::Matrix;
 
 use crate::matrix::divide_conquer::divide_and_conquer;
 use crate::matrix::mat_mul::multiply_matrix;
-// use crate::matrix::divide_conquer::my_dc;
 use crate::matrix::matrix::MatrixView;
 use crate::matrix::strassen::strassen;
 use crate::matrix::strassen::strassen_sequential;
@@ -111,13 +110,13 @@ fn main() {
     //-----------------------------------
 
     // ----------- BENCHMARK --------------
-    let n = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048];
-    for i in n {
-        println!("{i}");
-        benchmark_strassen_parallel_csv(i, "strassen_parallel.csv", false);
-        benchmark_iterative_csv(i, "iterative_rust.csv");
-        benchmark_dc_csv(i, "dc_rust.csv", false);
-    }
+    // let n = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048];
+    // for i in n {
+    //     println!("{i}");
+    //     benchmark_strassen_parallel_csv(i, "strassen_parallel.csv", false);
+    //     benchmark_iterative_csv(i, "iterative_rust.csv", false);
+    //     benchmark_dc_csv(i, "dc_rust.csv", false);
+    // }
 }
 
 fn benchmark_strassen_parallel_csv(
@@ -164,6 +163,7 @@ fn benchmark_strassen_parallel_csv(
 fn benchmark_iterative_csv(
     rows: usize,
     csv_path: &str,
+    save: bool,
 ) {
     let mut total_us: u128 = 0;
 
@@ -188,15 +188,17 @@ fn benchmark_iterative_csv(
         rows, rows, avg_us
     );
 
-    // use std::io::Write;
-    // let mut file = std::fs::OpenOptions::new()
-    //     .create(true)
-    //     .append(true)
-    //     .open(csv_path)
-    //     .expect("Failed to open CSV");
-
-    // writeln!(file, "{},{}", rows, avg_us)
-    //     .expect("Failed to write CSV");
+    if save {
+        use std::io::Write;
+        let mut file = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(csv_path)
+            .expect("Failed to open CSV");
+    
+        writeln!(file, "{},{}", rows, avg_us)
+            .expect("Failed to write CSV");
+    }
 }
 
 fn benchmark_dc_csv(
