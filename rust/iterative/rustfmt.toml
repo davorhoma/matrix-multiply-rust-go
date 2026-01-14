@@ -1,0 +1,14 @@
+# Maximum line width before rustfmt breaks lines
+max_width = 120
+
+# Keep struct literals on a single line when possible
+struct_lit_single_line = true
+
+# Optional: control how function arguments are formatted
+fn_args_layout = "Compressed"  # keeps small argument lists in one line
+
+# Optional: control how arrays are formatted
+array_layout = "Compressed"  # keeps small arrays on one line
+
+# Optional: control how enums are formatted
+enum_discrim_align = "Left"  # affects enums; helps keep things compact
