@@ -40,31 +40,6 @@ func print_matrix(m [][]int) {
 	fmt.Println()
 }
 
-func multiply_matrix_old(A, B [][]int) [][]int {
-	rowsA, colsA := len(A), len(A[0])
-	rowsB, colsB := len(B), len(B[0])
-
-	for colsA != rowsB {
-		fmt.Println("Matrix multiplication is not possible. Matrices need to be of dimensions: _xM and Mx_")
-		return nil
-	}
-
-	C := make([][]int, rowsA)
-	for i := range C {
-		C[i] = make([]int, colsB)
-	}
-
-	for i := range rowsA {
-		for j := range colsB {
-			for k := range colsA {
-				C[i][j] += A[i][k] * B[k][j]
-			}
-		}
-	}
-
-	return C
-}
-
 func newMatrix(rows, cols int) Matrix {
 	C := make(Matrix, rows)
 	for i := range C {
@@ -74,209 +49,56 @@ func newMatrix(rows, cols int) Matrix {
 	return C
 }
 
-func multiplyMatrix(A, B Matrix) Matrix {
-	rowsA, colsA := len(A), len(A[0])
-	rowsB, colsB := len(B), len(B[0])
-
-	if colsA != rowsB {
-		fmt.Println("Incompatible dimensions")
-		return nil
-	}
-
-	C := newMatrix(rowsA, colsB)
-	for i := range rowsA {
-		for k := range colsA {
-			for j := range colsB {
-				C[i][j] += A[i][k] * B[k][j]
-			}
-		}
-	}
-
-	return C
-}
-
-func mulDC(a, b, c [][]int) {
-	n := len(a)
-
-	// base case
-	if n == 1 {
-		mulBase(a, b, c)
-		return
-	}
-
-	// split matrices into views
-	a11, a12, a21, a22 := splitView(a)
-	b11, b12, b21, b22 := splitView(b)
-	c11, c12, c21, c22 := splitView(c)
-
-	// temporary matrices for intermediate products
-	t1 := makeZeroMatrix(n / 2)
-	t2 := makeZeroMatrix(n / 2)
-
-	// C11 = A11*B11 + A12*B21
-	mulDC(a11, b11, t1)
-	mulDC(a12, b21, t2)
-	add(t1, t2, c11)
-
-	// C12 = A11*B12 + A12*B22
-	mulDC(a11, b12, t1)
-	mulDC(a12, b22, t2)
-	add(t1, t2, c12)
-
-	// C21 = A21*B11 + A22*B21
-	mulDC(a21, b11, t1)
-	mulDC(a22, b21, t2)
-	add(t1, t2, c21)
-
-	// C22 = A21*B12 + A22*B22
-	mulDC(a21, b12, t1)
-	mulDC(a22, b22, t2)
-	add(t1, t2, c22)
-}
-
 const THRESHOLD = 128
-const PARALLEL_THRESHOLD = 128 //256
-
-func (C *Matrix) multiply(A, B [][]int) {
-	rowsA, colsA := len(A), len(A[0])
-	rowsB, colsB := len(B), len(B[0])
-
-	if colsA != rowsB {
-		fmt.Println("Incompatible dimensions")
-		return
-	}
-
-	for i := range rowsA {
-		for k := range colsA {
-			for j := range colsB {
-				(*C)[i][j] += A[i][k] * B[k][j]
-			}
-		}
-	}
-}
+const PARALLEL_THRESHOLD = 128
 
 func main() {
-	// rows, cols := 2048, 2048
+	rows, cols := 2048, 2048
 
-	// A := generate_matrix(rows, cols)
-	// B := generate_matrix(rows, cols)
+	A := generate_matrix(rows, cols)
+	B := generate_matrix(rows, cols)
 
-	// C := newMatrix(rows, cols)
+	startIterative := time.Now()
+	C := newMatrix(rows, cols)
+	multiplyMatrix(A, B, C)
+	elapsedIterative := time.Since(startIterative)
+	println("Time elapsed iterative: ", elapsedIterative.Milliseconds())
 
-	// startSeq := time.Now()
-	// D := multiply_matrix_old(A, B)
-	// elapsedSeq := time.Since(startSeq)
-	// println("Time elapsed seq: ", elapsedSeq.Milliseconds())
+	startDC := time.Now()
+	DC := newMatrix(rows, cols)
+	divideAndConquer(A, B, DC)
+	elapsedDC := time.Since(startDC)
+	println("Time elapsed DC: ", elapsedDC.Milliseconds())
 
-	// startSeq2 := time.Now()
-	// D2 := multiplyMatrix(A, B)
-	// elapsedSeq2 := time.Since(startSeq2)
-	// println("Time elapsed multiplyMatrix: ", elapsedSeq2.Milliseconds())
-
-	// if equalMatrices(D, D2) {
-	// 	println("Validation passed: matrices are equal")
-	// } else {
-	// 	println("Validation failed: matrices are NOT equal")
-	// }
-
-	// startSeq3 := time.Now()
-	// D3 := newMatrix(rows, cols)
-	// multiplyMatrixIterative(A, B, D3)
-	// elapsedSeq3 := time.Since(startSeq3)
-	// println("Time elapsed multiplyMatrixIterative: ", elapsedSeq3.Milliseconds())
-
-	// if equalMatrices(D, D3) {
-	// 	println("Validation passed: matrices are equal")
-	// } else {
-	// 	println("Validation failed: matrices are NOT equal")
-	// }
-
-	// startSeq4 := time.Now()
-	// D4 := newMatrix(rows, cols)
-	// D4.multiply(A, B)
-	// elapsedSeq4 := time.Since(startSeq4)
-	// println("Time elapsed interface: ", elapsedSeq4.Milliseconds())
-
-	// if equalMatrices(D, D3) {
-	// 	println("Validation passed: matrices are equal")
-	// } else {
-	// 	println("Validation failed: matrices are NOT equal")
-	// }
-
-	// startSeq5 := time.Now()
-	// D5 := newMatrix(rows, cols)
-	// multiplyMatrixIterative_test(A, B, &D5)
-	// elapsedSeq5 := time.Since(startSeq5)
-	// println("Time elapsed test: ", elapsedSeq5.Milliseconds())
-
-	// if equalMatrices(D, D3) {
-	// 	println("Validation passed: matrices are equal")
-	// } else {
-	// 	println("Validation failed: matrices are NOT equal")
-	// }
-
-	// startDC := time.Now()
-	// myDCParallel_2(A, B, C)
-	// elapsedDC := time.Since(startDC)
-	// println("Time elapsed DC: ", elapsedDC.Milliseconds())
-
-	// if equalMatrices(C, D) {
-	// 	println("Validation passed: matrices are equal")
-	// } else {
-	// 	println("Validation failed: matrices are NOT equal")
-	// }
-
-	// DC_3 := make([][]int, rows)
-	// for i := range C {
-	// 	DC_3[i] = make([]int, cols)
-	// }
-
-	// startDC_3 := time.Now()
-	// divideAndConquer(A, B, DC_3)
-	// elapsedDC_3 := time.Since(startDC_3)
-	// println("Time elapsed DC_3: ", elapsedDC_3.Milliseconds())
-
-	// if equalMatrices(C, DC_3) {
-	// 	println("Validation passed: matrices are equal")
-	// } else {
-	// 	println("Validation failed: matrices are NOT equal")
-	// }
-
-	// S := newMatrix(rows, cols)
-
-	// startStrassen := time.Now()
-	// strassen(A, B, S)
-	// elapsedStrassen := time.Since(startStrassen)
-	// println("Time elapsed Strassen: ", elapsedStrassen.Milliseconds())
-	// if equalMatrices(C, S) {
-	// 	println("Validation passed: matrices are equal")
-	// } else {
-	// 	println("Validation failed: matrices are NOT equal")
-	// }
-
-	// S2 := newMatrix(rows, cols)
-
-	// startStrassen2 := time.Now()
-	// strassen(A, B, S2)
-	// elapsedStrassen2 := time.Since(startStrassen2)
-	// println("Time elapsed Strassen2: ", elapsedStrassen2.Milliseconds())
-	// if equalMatrices(C, S2) {
-	// 	println("Validation passed: matrices are equal")
-	// } else {
-	// 	println("Validation failed: matrices are NOT equal")
-	// }
-
-	sizes := []int{1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096}
-	for _, size := range sizes {
-		// fmt.Print(size)
-		// A := generate_matrix(size, size)
-		// B := generate_matrix(size, size)
-
-		// calculateStrassenTime(size, size, A, B)
-		// benchmarkIterative(size)
-		// benchmarkDivideAndConquer(size)
-		benchmarkStrassen(size, size)
+	if equalMatrices(C, DC) {
+		println("Validation passed: matrices are equal")
+	} else {
+		println("Validation failed: matrices are NOT equal")
 	}
+
+	S := newMatrix(rows, cols)
+
+	startStrassen := time.Now()
+	strassen(A, B, S)
+	elapsedStrassen := time.Since(startStrassen)
+	println("Time elapsed Strassen: ", elapsedStrassen.Milliseconds())
+	if equalMatrices(C, S) {
+		println("Validation passed: matrices are equal")
+	} else {
+		println("Validation failed: matrices are NOT equal")
+	}
+
+	// sizes := []int{1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096}
+	// for _, size := range sizes {
+	// 	// fmt.Print(size)
+	// 	A := generate_matrix(size, size)
+	// 	B := generate_matrix(size, size)
+
+	// 	calculateStrassenTime(size, size, A, B)
+	// 	benchmarkIterative(size)
+	// 	benchmarkDivideAndConquer(size)
+	// 	benchmarkStrassen(size, size)
+	// }
 }
 
 func equalMatrices(a, b [][]int) bool {
@@ -328,7 +150,7 @@ func benchmarkIterative(size int) {
 
 		start := time.Now()
 		C := newMatrix(size, size)
-		multiplyMatrixIterative(A, B, C)
+		multiplyMatrix(A, B, C)
 		iterativeTime += time.Since(start)
 		// println(i)
 	}
